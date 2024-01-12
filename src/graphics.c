@@ -1,8 +1,6 @@
-#include "vulkan/vulkan_core.h"
 #include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include "shared.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -11,40 +9,6 @@
 const int WIDTH = 640;
 const int HEIGHT = 480;
 const char TITLE[] = "Hello World";
-
-/* helpers */
-#define die(fmt, ...)                                                          \
-  do {                                                                         \
-    fprintf(stderr, fmt, __VA_ARGS__);                                         \
-    exit(EXIT_FAILURE);                                                        \
-  } while (0)
-
-struct ShaderCode {
-  char *data;
-  int size;
-};
-
-struct ShaderCode readShaderCode(char *path) {
-  FILE *fp = fopen(path, "r");
-  if (fp == NULL) {
-    die("failed to open file! %s", path);
-  }
-
-  fseek(fp, 0, SEEK_END);
-  int size = ftell(fp);
-  rewind(fp);
-
-  char *buffer = malloc(size + 1);
-  memset(buffer, 0, size + 1);
-
-  fread(buffer, 1, size, fp);
-  fclose(fp);
-
-  return (struct ShaderCode){
-      .data = buffer,
-      .size = size,
-  };
-}
 
 /* return required extensions */
 const char **requiredExtensions(uint32_t *length) {
@@ -235,7 +199,7 @@ VkExtent2D chooseSwapExtent(struct SwapChainSupportDetails details,
   return actualExtent;
 }
 
-VkShaderModule createShaderModule(struct ShaderCode code, VkDevice device) {
+VkShaderModule createShaderModule(struct FileContents code, VkDevice device) {
   VkShaderModuleCreateInfo createInfo = {0};
   createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
   createInfo.codeSize = code.size;
@@ -528,9 +492,9 @@ int main() {
 
   /* create pipeline layout */
   VkShaderModule vertShaderModule =
-      createShaderModule(readShaderCode("bin/vert.spv"), device);
+      createShaderModule(readFileContents("bin/vert.spv"), device);
   VkShaderModule fragShaderModule =
-      createShaderModule(readShaderCode("bin/frag.spv"), device);
+      createShaderModule(readFileContents("bin/frag.spv"), device);
 
   VkPipelineShaderStageCreateInfo vertShaderStageInfo = {0};
   vertShaderStageInfo.sType =

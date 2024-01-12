@@ -1,18 +1,24 @@
-VULKAN_INC = $$HOME/VulkanSDK/1.3.268.1/macOS/include
-VULKAN_LNK = $$HOME/VulkanSDK/1.3.268.1/macOS/lib
-
 CC = clang
 GLSLC = glslc
 
-CFLAGS += -g3                                       \
-          `pkg-config --libs --cflags glfw3 vulkan` \
-          -I $(VULKAN_INC)                          \
-          -L $(VULKAN_LNK)                          \
-          -lvulkan
+LIBS = glfw3 vulkan
 
-bin/main: src/main.c bin/vert.spv bin/frag.spv
+CFLAGS += -g3                                       \
+          `pkg-config --libs --cflags $(LIBS)`
+
+MAIN_OBJ = src/main.o   \
+           src/lexer.o  \
+           src/shared.o \
+
+GRAPHICS_OBJ = src/graphics.o \
+               src/shared.o   \
+
+bin/main: $(MAIN_OBJ)
+	$(CC) $(CFLAGS) -o $@ $^
+
+bin/graphics: $(GRAPHICS_OBJ) bin/vert.spv bin/frag.spv
 	mkdir -p bin
-	$(CC) $(CFLAGS) src/main.c -o bin/main
+	$(CC) $(CFLAGS) -o $@ $(GRAPHICS_OBJ)
 
 bin/vert.spv: src/shaders/shader.vert
 	mkdir -p bin
@@ -25,3 +31,4 @@ bin/frag.spv: src/shaders/shader.frag
 .PHONY: clean
 clean:
 	rm -rf bin
+	rm -f $(MAIN_OBJ) $(GRAPHICS_OBJ)
